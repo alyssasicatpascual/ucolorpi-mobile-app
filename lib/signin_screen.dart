@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:cloud_firestore/cloud_firestore.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
+import 'auth.dart';
 import 'signup_screen.dart';
 import 'homepage.dart';
 
@@ -12,47 +11,33 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-//  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   bool _obscurePassword = true;
-/*  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  
-  //login function
-  Future<void> _loginUser() async {
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
+  final Auth _auth = Auth();
 
-  if (email.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter email and password')),
-    );
-    return;
-  }
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  try {
-    await _auth.signInWithEmailAndPassword(email: email, password: password);
-    // Login successful → navigate to HomePage
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
-  } on FirebaseAuthException catch (e) {
-    String message = 'Login failed';
-    if (e.code == 'user-not-found') {
-      message = 'No user found for that email';
-    } else if (e.code == 'wrong-password') {
-      message = 'Incorrect password';
+  bool isLoading = false;
+
+  Future<void> _login() async {
+    setState(() => isLoading = true);
+
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage(isReturningUser: true)));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('An error occurred. Please try again.')),
-    );
   }
-}
-*/
+
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +121,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   // Email field (pill)
                   TextField(
-                    //controller: _emailController,
+                    controller: emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       hintText: 'example@gmail.com',
@@ -161,7 +146,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   // Password field with suffix icon in pill
                   TextField(
-                    //controller: _passwordController,
+                    controller: passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       hintText: '***************',
@@ -201,8 +186,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   // Gradient Log In button
                   GestureDetector(
-                    //onTap: _loginUser,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HomePage(isReturningUser: true))),
+                    onTap: () => _login(),
                     child: Container(
                       width: double.infinity,
                       height: 52,

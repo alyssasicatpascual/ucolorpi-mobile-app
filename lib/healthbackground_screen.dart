@@ -223,6 +223,7 @@ class _HealthBackgroundScreenState extends State<HealthBackgroundScreen> {
                         final credential = await auth.createUserWithEmailAndPassword(
                           email: widget.profile['email'],
                           password: widget.profile['password'],
+                          fullName: widget.profile['fullName'],
                         );
 
                         final uid = credential.user?.uid;

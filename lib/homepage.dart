@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,23 +20,37 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
   int navIndex = 0;
   String? _fullName;
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
+    // initial load and keep in sync when auth state changes
     _loadFullName();
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      _loadFullName(user);
+    });
   }
 
-  Future<void> _loadFullName() async {
+  Future<void> _loadFullName([User? user]) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final u = user ?? FirebaseAuth.instance.currentUser;
+      if (u == null) {
+        if (mounted) setState(() => _fullName = null);
+        return;
+      }
+      final doc = await FirebaseFirestore.instance.collection('users').doc(u.uid).get();
       final name = doc.data()?['fullName'] as String?;
-      if (mounted) setState(() => _fullName = name ?? user.email);
+      if (mounted) setState(() => _fullName = name ?? u.email);
     } catch (_) {
       // ignore errors and keep default
     }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   // Device connection state: false by default. When true, UI shows Connected and button becomes 'Start a New Scan'.
