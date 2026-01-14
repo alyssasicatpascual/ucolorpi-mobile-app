@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'mockData.dart';
+import 'fullReport.dart';
 import 'A_NewScan.dart';
 import 'recordHistory.dart';
 
@@ -19,23 +21,37 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
   int navIndex = 0;
   String? _fullName;
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
+    // initial load and keep in sync when auth state changes
     _loadFullName();
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      _loadFullName(user);
+    });
   }
 
-  Future<void> _loadFullName() async {
+  Future<void> _loadFullName([User? user]) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final u = user ?? FirebaseAuth.instance.currentUser;
+      if (u == null) {
+        if (mounted) setState(() => _fullName = null);
+        return;
+      }
+      final doc = await FirebaseFirestore.instance.collection('users').doc(u.uid).get();
       final name = doc.data()?['fullName'] as String?;
-      if (mounted) setState(() => _fullName = name ?? user.email);
+      if (mounted) setState(() => _fullName = name ?? u.email);
     } catch (_) {
       // ignore errors and keep default
     }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   // Device connection state: false by default. When true, UI shows Connected and button becomes 'Start a New Scan'.
@@ -127,15 +143,21 @@ class _HomePageState extends State<HomePage> {
         // top area (same spacing as provided mock)
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+          // more top spacing, less bottom spacing
+          padding: const EdgeInsets.fromLTRB(16, 30, 16, 6),
           color: bgColor,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.isReturningUser ? 'Hi, WelcomeBack' : 'Hi, Welcome', style: const TextStyle(color: Color(0xFF33E4DB), fontSize: 12)),
-              const SizedBox(height: 6),
-              Text(_fullName ?? 'Jane Doe', style: const TextStyle(color: Colors.black87, fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(text: widget.isReturningUser ? 'Welcome back, ' : 'Welcome, ', style: const TextStyle(color: Color(0xFF33E4DB), fontSize: 20, fontWeight: FontWeight.w700)),
+                    TextSpan(text: _fullName ?? 'Jane Doe', style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 2),
               const Text('UCOLORPI Device', style: TextStyle(color: Color(0xFF33E4DB), fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Column(
@@ -266,7 +288,9 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullReportPage(record: record)));
+                          },
                           style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), minimumSize: const Size(0, 28), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                           child: const Text('View full result', style: TextStyle(color: Colors.white, fontSize: 13)),
                         )
