@@ -6,6 +6,7 @@ import 'mockData.dart';
 import 'fullReport.dart';
 import 'A_NewScan.dart';
 import 'recordHistory.dart';
+import 'settings_screen/settingMain.dart';
 
 class HomePage extends StatefulWidget {
   final bool isReturningUser;
@@ -22,14 +23,18 @@ class _HomePageState extends State<HomePage> {
   int navIndex = 0;
   String? _fullName;
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _userDocSubscription;
 
   @override
   void initState() {
     super.initState();
     // initial load and keep in sync when auth state changes
     _loadFullName();
+    // Attach real-time listener to the user's document so UI updates when profile changes
+    _attachUserDocListener(FirebaseAuth.instance.currentUser);
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       _loadFullName(user);
+      _attachUserDocListener(user);
     });
   }
 
@@ -51,7 +56,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _userDocSubscription?.cancel();
     super.dispose();
+  }
+
+  void _attachUserDocListener(User? user) {
+    _userDocSubscription?.cancel();
+    if (user == null) return;
+    _userDocSubscription = FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots().listen((doc) {
+      final name = doc.data()?['fullName'] as String?;
+      if (mounted) setState(() => _fullName = name ?? user.email);
+    }, onError: (_) {
+      // ignore
+    });
   }
 
   // Device connection state: false by default. When true, UI shows Connected and button becomes 'Start a New Scan'.
@@ -395,7 +412,8 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: navIndex == 1 ? const RecordHistoryPage() : homeContent,
+      // show Record or Settings depending on nav index
+      body: navIndex == 1 ? const RecordHistoryPage() : (navIndex == 2 ? const SettingsMain() : homeContent),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFFFFFFFF),
         selectedItemColor: const Color(0xFF39E8DB),
