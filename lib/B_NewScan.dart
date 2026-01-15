@@ -22,7 +22,7 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
   @override
   void initState() {
     super.initState();
-    // Start scanning immediately. Replace this with real device stream for backend connectivity.
+    // Start scanning immediately.
     _startSimulatedProgress();
   }
 
@@ -38,24 +38,40 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('SCAN COMPLETE!', style: TextStyle(color: BNewScanScreen.gradientStart, fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                'SCAN COMPLETE!',
+                style: TextStyle(
+                  color: BNewScanScreen.gradientStart,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildGradientButton('View Full Report', () {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Full report not yet implemented')));
-                    }),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildGradientButton('Go Home', () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const HomePage()), (route) => false);
-                    }),
-                  ),
-                ],
+              // Wrapped in IntrinsicHeight so buttons match height
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _buildGradientButton('View Full Report', () {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Full report not yet implemented')),
+                        );
+                      }),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildGradientButton('Go Home', () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const HomePage()),
+                          (route) => false,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -68,13 +84,24 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 40,
+        // Dynamic padding allows button to grow with text (fixes the clipping issue)
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(colors: [BNewScanScreen.gradientStart, BNewScanScreen.gradientEnd]),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))],
+          gradient: const LinearGradient(
+            colors: [BNewScanScreen.gradientStart, BNewScanScreen.gradientEnd],
+          ),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
+          ],
         ),
-        child: Center(child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+        child: Center(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
     );
   }
@@ -87,10 +114,8 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
         if (_progress >= 1.0) {
           _progress = 1.0;
           t.cancel();
-          // Show completion dialog once when finished
           if (!_hasShownDialog) {
             _hasShownDialog = true;
-            // Schedule after setState to avoid calling showDialog during build
             Future.microtask(() => _showCompleteDialog());
           }
         }
@@ -106,6 +131,9 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine if finished for the text status
+    final bool isCompleted = _progress >= 1.0;
+
     return Scaffold(
       backgroundColor: BNewScanScreen.bgColor,
       body: SafeArea(
@@ -114,29 +142,51 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
           children: [
             const SizedBox(height: 8),
 
-            // --- Top logo & status (copied from A_NewScan) ---
+            // --- Top logo & status ---
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
+                      ],
                     ),
-                    child: SvgPicture.asset('assets/images/ucolorpi_icon.svg', width: 72, height: 72, color: BNewScanScreen.gradientStart, semanticsLabel: 'UColorPi icon'),
+                    child: SvgPicture.asset(
+                      'assets/images/ucolorpi_icon.svg',
+                      width: 72,
+                      height: 72,
+                      color: BNewScanScreen.gradientStart,
+                      semanticsLabel: 'UColorPi icon',
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  const Text('UCOLORPI Device', style: TextStyle(color: Color(0xFF33E4DB), fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Text(
+                    'UCOLORPI Device',
+                    style: TextStyle(
+                      color: Color(0xFF33E4DB),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text('Status: ', style: TextStyle(fontSize: 14)),
-                      SizedBox(width: 6),
-                      Text('Analyzing Dipstick', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                    children: [
+                      const Text('Status: ', style: TextStyle(fontSize: 14)),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Analyzing Dipstick',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -155,81 +205,129 @@ class _BNewScanScreenState extends State<BNewScanScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                    Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: BNewScanScreen.gradientStart,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: SvgPicture.asset('assets/images/ucolorpi_icon.svg', width: 36, height: 36, color: Colors.white, semanticsLabel: 'UColorPi icon'),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Scanning in Progress...', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 8),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: LinearProgressIndicator(value: _progress, minHeight: 8, color: BNewScanScreen.gradientStart, backgroundColor: Colors.grey[200]),
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: BNewScanScreen.gradientStart,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: SvgPicture.asset(
+                                    'assets/images/ucolorpi_icon.svg',
+                                    width: 36,
+                                    height: 36,
+                                    color: Colors.white,
+                                    semanticsLabel: 'UColorPi icon',
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text('${(_progress * 100).round()}%', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    const Center(child: Text('Please wait while we analyze your sample.', style: TextStyle(color: Colors.black54, fontSize: 12))),
-
-                    const SizedBox(height: 40),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Center(
-                              child: RichText(
-                                textAlign: TextAlign.center,
-                                text: const TextSpan(
+                              const SizedBox(width: 16),
+                              
+                              // --- Middle Text & Bar ---
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    TextSpan(text: 'NOTE: ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15)),
-                                    TextSpan(text: 'Avoid Moving The Device Or Removing The Dipstick During The Scan.', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+                                    // FIX 1: Conditional text & maxLines prevents jumping/wrapping
+                                    Text(
+                                      isCompleted ? 'Completed' : 'Scanning in Progress...',
+                                      maxLines: 1, 
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: LinearProgressIndicator(
+                                        value: _progress,
+                                        minHeight: 8,
+                                        color: BNewScanScreen.gradientStart,
+                                        backgroundColor: Colors.grey[200],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                            ),
+                              
+                              const SizedBox(width: 12),
+
+                              // --- Percentage Text ---
+                              // FIX 2: Fixed width SizedBox prevents layout shift when numbers grow
+                              SizedBox(
+                                width: 45, 
+                                child: Text(
+                                  '${(_progress * 100).round()}%',
+                                  textAlign: TextAlign.end,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),                ),              ),
+                      const SizedBox(height: 16),
+                      const Center(
+                        child: Text(
+                          'Please wait while we analyze your sample.',
+                          style: TextStyle(color: Colors.black54, fontSize: 12),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Center(
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: const TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'NOTE: ',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            'Avoid Moving The Device Or Removing The Dipstick During The Scan.',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),

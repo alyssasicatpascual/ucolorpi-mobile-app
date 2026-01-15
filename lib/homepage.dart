@@ -83,18 +83,19 @@ class _HomePageState extends State<HomePage> {
   static const gradientStart = Color(0xFF33E4DB);
   static const gradientEnd = Color(0xFF00BBD3);
 
+  // --- UPDATED LOGIC START ---
   HealthStatus evaluate(UrinalysisRecord r) {
     int outOfRange = 0;
 
-    // ph healthy when exactly 7.0
+    // FIX: Updated pH logic to accept a healthy range (5.0 - 8.0)
     final ph = double.tryParse(r.ph) ?? 0.0;
-    if (ph != 7.0) outOfRange++;
+    if (ph < 5.0 || ph > 8.0) outOfRange++;
 
-    // specific gravity healthy between 1.005 and 1.030 inclusive
+    // Specific Gravity Logic (1.005 - 1.030)
     final sg = double.tryParse(r.specificGravity) ?? 0.0;
     if (!(sg >= 1.005 && sg <= 1.030)) outOfRange++;
 
-    // other chemical parameters should be "Negative"
+    // Chemical Logic (Should be Negative)
     final chemicals = [
       r.glucose,
       r.blood,
@@ -107,6 +108,7 @@ class _HomePageState extends State<HomePage> {
     ];
 
     for (var v in chemicals) {
+      // Case-insensitive check for 'negative'
       if (v.toLowerCase() != 'negative') outOfRange++;
     }
 
@@ -114,6 +116,7 @@ class _HomePageState extends State<HomePage> {
     if (outOfRange <= 2) return HealthStatus.attention;
     return HealthStatus.abnormal;
   }
+  // --- UPDATED LOGIC END ---
 
   Color statusColor(HealthStatus s) {
     switch (s) {
@@ -365,23 +368,24 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
+                  // Title
+                  const Text('Quick Health Tips', style: TextStyle(color: Color(0xFF00BBD3), fontWeight: FontWeight.bold)),
+                  
+                  // UPDATED: Result Status on its own line below title
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      const Text('Quick Health Tips', style: TextStyle(color: Color(0xFF00BBD3), fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 8),
                       const Text('Result: ', style: TextStyle(color: Colors.black54)),
                       Icon(Icons.circle, color: statusColor(status), size: 12),
                       const SizedBox(width: 6),
                       Text(statusText(status), style: const TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 8),
                       MouseRegion(
                         key: _infoKey,
                         onEnter: (_) => _showStatusInfoOverlay(),
                         onExit: (_) => _hideStatusInfoOverlay(),
                         child: GestureDetector(
                           onTap: () {
-                            // Fallback for touch devices: show dialog with same content
                             showDialog(
                               context: context,
                               builder: (_) => Dialog(
@@ -395,7 +399,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
+                  
                   const SizedBox(height: 12),
+                  
                   // Tip content
                   Text(_tipForStatus(status), style: const TextStyle(color: Colors.black87)),
                   const SizedBox(height: 12),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'mockData.dart'; // Ensure this file exists
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart'; // Using the printing package
+import 'package:printing/printing.dart';
 
 class FullReportPage extends StatelessWidget {
   final UrinalysisRecord record;
@@ -15,46 +15,79 @@ class FullReportPage extends StatelessWidget {
     return '${months[d.month - 1]} ${d.day}, ${d.year}';
   }
 
+  // Helper method to determine status logic so we can reuse it
+  String _getStatus() {
+    int outOfRange = 0;
+
+    // FIX 1: pH check. Normal is between 5.0 and 8.0.
+    final ph = double.tryParse(record.ph) ?? 0.0;
+    if (ph < 5.0 || ph > 8.0) outOfRange++; 
+
+    // Specific Gravity check
+    final sg = double.tryParse(record.specificGravity) ?? 0.0;
+    if (!(sg >= 1.005 && sg <= 1.030)) outOfRange++;
+
+    // Chemical check
+    final chemicals = [
+      record.glucose,
+      record.blood,
+      record.ketone,
+      record.protein,
+      record.urobilinogen,
+      record.bilirubin,
+      record.leukocyte,
+      record.nitrite
+    ];
+    
+    for (var v in chemicals) {
+      if (v.toLowerCase() != 'negative' && v.toLowerCase() != 'normal') {
+        outOfRange++;
+      }
+    }
+
+    if (outOfRange == 0) return 'Normal';
+    if (outOfRange <= 2) return 'Attention';
+    return 'Abnormal';
+  }
+
+  // New helper to get the descriptive remark based on status
+  String _getRemarks(String status) {
+    if (status == 'Normal') {
+      return 'Overall Result Is Within Normal Range.';
+    } else if (status == 'Attention') {
+      return 'Some values are slightly out of range. Please monitor or re-test.';
+    } else {
+      return 'Critical values detected. Please consult a healthcare professional.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    String status() {
-      int outOfRange = 0;
-      final ph = double.tryParse(record.ph) ?? 0.0;
-      if (ph != 7.0) outOfRange++;
-      final sg = double.tryParse(record.specificGravity) ?? 0.0;
-      if (!(sg >= 1.005 && sg <= 1.030)) outOfRange++;
-      final chemicals = [record.glucose, record.blood, record.ketone, record.protein, record.urobilinogen, record.bilirubin, record.leukocyte, record.nitrite];
-      for (var v in chemicals) if (v.toLowerCase() != 'negative') outOfRange++;
-      if (outOfRange == 0) return 'Normal';
-      if (outOfRange <= 2) return 'Attention';
-      return 'Abnormal';
-    }
+    final currentStatus = _getStatus(); 
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       body: Column(
         children: [
-          // 1. MERGED HEADER (Back button is now inside the gradient)
+          // 1. MERGED HEADER
           Container(
             width: double.infinity,
-            // Add padding for the status bar
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 10, 
+              top: MediaQuery.of(context).padding.top + 10,
               bottom: 20,
               left: 10,
               right: 10
             ),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter, 
-                end: Alignment.bottomCenter, 
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [Color(0xFF33E4DB), Color(0xFF00BBD3)]
               ),
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Back Button (Aligned Left)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
@@ -62,7 +95,6 @@ class FullReportPage extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
-                // Title Info (Centered)
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -81,7 +113,6 @@ class FullReportPage extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                // Ensure bottom padding for Navigation Bar
                 padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 24),
                 child: Column(
                   children: [
@@ -136,7 +167,8 @@ class FullReportPage extends StatelessWidget {
                         children: [
                           const Text('Remarks:', style: TextStyle(color: Colors.black54)),
                           const SizedBox(height: 6),
-                          Text(status() == 'Normal' ? 'Overall Result Is Within Normal Range.' : 'Please consult a healthcare professional for abnormal results.'),
+                          // Updated to use the helper function
+                          Text(_getRemarks(currentStatus)),
                         ],
                       ),
                     ),
@@ -187,8 +219,8 @@ class FullReportPage extends StatelessWidget {
               ),
             ),
           ),
-        ],      
-        ),
+        ],
+      ),
     );
   }
 
@@ -202,11 +234,12 @@ class FullReportPage extends StatelessWidget {
     );
   }
 
-  // UPDATED: Now uses Printing package to save to public Downloads/Files
   Future<void> _downloadPDF(BuildContext context) async {
     try {
       final pdf = pw.Document();
       final recordId = generateRecordId(record, mockUrinalysisRecords);
+      final currentStatus = _getStatus(); 
+      final remarks = _getRemarks(currentStatus);
 
       pdf.addPage(
         pw.Page(
@@ -244,7 +277,7 @@ class FullReportPage extends StatelessWidget {
                 pw.SizedBox(height: 15),
                 pw.Text('REMARKS', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 5),
-                pw.Text(_getStatus() == 'Normal' ? 'Overall Result Is Within Normal Range.' : 'Please consult a healthcare professional for abnormal results.', style: const pw.TextStyle(fontSize: 11)),
+                pw.Text(remarks, style: const pw.TextStyle(fontSize: 11)),
                 pw.SizedBox(height: 15),
                 pw.Container(
                   padding: const pw.EdgeInsets.all(10),
@@ -265,7 +298,6 @@ class FullReportPage extends StatelessWidget {
         ),
       );
 
-      // This prompts the user to save the file
       await Printing.sharePdf(bytes: await pdf.save(), filename: 'U-COLORPI-Report-$recordId.pdf');
 
     } catch (e) {
@@ -273,18 +305,5 @@ class FullReportPage extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error generating PDF: $e')));
       }
     }
-  }
-
-  String _getStatus() {
-    int outOfRange = 0;
-    final ph = double.tryParse(record.ph) ?? 0.0;
-    if (ph != 7.0) outOfRange++;
-    final sg = double.tryParse(record.specificGravity) ?? 0.0;
-    if (!(sg >= 1.005 && sg <= 1.030)) outOfRange++;
-    final chemicals = [record.glucose, record.blood, record.ketone, record.protein, record.urobilinogen, record.bilirubin, record.leukocyte, record.nitrite];
-    for (var v in chemicals) if (v.toLowerCase() != 'negative') outOfRange++;
-    if (outOfRange == 0) return 'Normal';
-    if (outOfRange <= 2) return 'Attention';
-    return 'Abnormal';
   }
 }

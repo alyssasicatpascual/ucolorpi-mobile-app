@@ -1,4 +1,3 @@
-
 class UrinalysisRecord {
   final String id;
   final DateTime date;
@@ -33,11 +32,11 @@ class UrinalysisRecord {
 // ---------------- MOCK RECORDS LIST ----------------
 
 final List<UrinalysisRecord> mockUrinalysisRecords = [
-  // 🔹 Record 1 (Normal)
+  // 🔹 Record 1: NORMAL
+  // 0 Deviations
   UrinalysisRecord(
     id: "UCP-2026-0001",
     date: DateTime(2025, 10, 28),
-
     ph: "7.0",
     specificGravity: "1.010",
     glucose: "Negative",
@@ -50,16 +49,15 @@ final List<UrinalysisRecord> mockUrinalysisRecords = [
     nitrite: "Negative",
   ),
 
-  // 🔹 Record 2 (With abnormalities – sample)
+  // 🔹 Record 2: ATTENTION
   UrinalysisRecord(
     id: "UCP-2026-0002",
     date: DateTime(2025, 11, 05),
-
     ph: "7.5",
-    specificGravity: "1.030",
-    glucose: "Positive",
-    blood: "Trace",
-    ketone: "Negative",
+    specificGravity: "1.025",
+    glucose: "Positive",    
+    blood: "Negative",      
+    ketone: "Positive",
     protein: "Negative",
     urobilinogen: "Negative",
     bilirubin: "Negative",
@@ -67,15 +65,16 @@ final List<UrinalysisRecord> mockUrinalysisRecords = [
     nitrite: "Negative",
   ),
 
+  // 🔹 Record 3: ABNORMAL
+  // 3 Deviations (Glucose, Blood, Ketone)
   UrinalysisRecord(
     id: "UCP-2026-0003",
     date: DateTime(2025, 12, 05),
-
     ph: "7.2",
     specificGravity: "1.030",
-    glucose: "Positive",
-    blood: "Trace",
-    ketone: "Negative",
+    glucose: "Positive",    // Deviation #1
+    blood: "Trace",         // Deviation #2
+    ketone: "Positive",     // Deviation #3
     protein: "Negative",
     urobilinogen: "Negative",
     bilirubin: "Negative",
@@ -85,14 +84,11 @@ final List<UrinalysisRecord> mockUrinalysisRecords = [
 ];
 
 // Generates a UCP ID based on the record's year and its sequence number
-// within allRecords for that year. Format: UCP-<YYYY>-<NNNN> (zero-padded).
 String generateRecordId(UrinalysisRecord record, List<UrinalysisRecord> allRecords) {
   final year = record.date.year;
-  // Filter records with the same year and sort by date ascending
   final sameYear = allRecords.where((r) => r.date.year == year).toList()
     ..sort((a, b) => a.date.compareTo(b.date));
 
-  // Find the index of this record among same-year records
   final idx = sameYear.indexWhere((r) => identical(r, record) || (r.date == record.date && r.id == record.id));
   final seq = (idx >= 0) ? (idx + 1) : 1;
   final seqStr = seq.toString().padLeft(4, '0');
