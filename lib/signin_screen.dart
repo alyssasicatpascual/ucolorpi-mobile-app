@@ -42,19 +42,27 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-  final primary1 = const Color(0xFF00BBD3);
+    final primary1 = const Color(0xFF00BBD3);
     final fieldFill = const Color(0xFFEFFCFB);
 
     return Scaffold(
       backgroundColor: Colors.white,
+      // Optional: resizeToAvoidBottomInset: false, // Uncomment if you want to stop the view from pushing up at all
       body: Column(
         children: [
           // 🔹 Gradient Header with centered title
           Container(
             width: double.infinity,
-            height: 100,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            // 1. REMOVED fixed height: 100
+            // 2. Added dynamic padding for status bar
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 20, // Status bar + 20px
+              bottom: 20,
+              left: 10,
+              right: 10,
+            ),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
@@ -62,36 +70,31 @@ class _SignInScreenState extends State<SignInScreen> {
                   Color(0xFF00BBD3),
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(0),
-              ),
             ),
-            child: SafeArea(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Back button aligned left
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () {},
+            child: Stack(
+              alignment: Alignment.center, // Ensure stack aligns children to center by default
+              children: [
+                // Back button aligned left
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(), // Added pop functionality
+                  ),
+                ),
+                // Centered title
+                const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Hello!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  // Centered title
-                  const Center(
-                    child: Text(
-                      'Hello!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -187,7 +190,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   // Gradient Log In button
                   GestureDetector(
-                    onTap: () => _login(),
+                    onTap: isLoading ? null : _login, // Prevent multiple taps while loading
                     child: Container(
                       width: double.infinity,
                       height: 52,
@@ -202,11 +205,13 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Text(
-                          'Log In',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-                        ),
+                      child: Center(
+                        child: isLoading 
+                          ? const CircularProgressIndicator(color: Colors.white) 
+                          : const Text(
+                              'Log In',
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                            ),
                       ),
                     ),
                   ),

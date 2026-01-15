@@ -54,10 +54,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Gradient header (consistent with other screens)
           Container(
             width: double.infinity,
-            height: 100,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 20, 
+              bottom: 20,
+              left: 10,
+              right: 10,
+            ),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -65,25 +69,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 colors: [primary2, primary1],
               ),
             ),
-            child: SafeArea(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
+            child: Stack(
+              alignment: Alignment.center, // Ensure stack defaults to center
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Center(
-                    child: Text(
-                      'Reset Your Password',
-                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
+                ),
+                const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Reset Your Password',
+                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 

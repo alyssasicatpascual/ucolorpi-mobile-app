@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'healthbackground_screen.dart';
+import 'auth.dart';
+import 'homepage.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -11,6 +12,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _acceptedPrivacy = false;
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
   String? sexValue;
@@ -26,19 +28,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            height: 100,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF33E4DB), Color(0xFF00BBD3)],
+      // 1. Ensure this is true so the view resizes when keyboard opens
+      resizeToAvoidBottomInset: true, 
+      // 2. We remove the main Column/Expanded. 
+      // Instead, the ENTIRE body is one ScrollView.
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // ---------------- HEADER (Now inside the scroll view) ----------------
+            Container(
+              width: double.infinity,
+              // Dynamic padding for Status Bar
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 20,
+                bottom: 20,
+                left: 10,
+                right: 10,
               ),
-            ),
-            child: SafeArea(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF33E4DB), Color(0xFF00BBD3)],
+                ),
+              ),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -62,10 +75,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
             ),
-          ),
+            // ---------------- END HEADER ----------------
 
-          Expanded(
-            child: SingleChildScrollView(
+            // ---------------- FORM BODY ----------------
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,6 +165,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextField(
                     controller: passwordController,
                     obscureText: _obscurePassword,
+                    // 3. Keep scrollPadding just in case
+                    scrollPadding: const EdgeInsets.only(bottom: 100),
                     decoration: InputDecoration(
                       hintText: '***************',
                       hintStyle: const TextStyle(color: Color(0xFF88D6D9)),
@@ -173,6 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextField(
                     controller: confirmController,
                     obscureText: _obscureConfirm,
+                    scrollPadding: const EdgeInsets.only(bottom: 100),
                     decoration: InputDecoration(
                       hintText: '***************',
                       hintStyle: const TextStyle(color: Color(0xFF88D6D9)),
@@ -188,18 +204,67 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
-                  const Center(
-                    child: Text(
-                      'By continuing, you agree to\nTerms of Use and Privacy Policy.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      StatefulBuilder(
+                        builder: (context, setStateInner) {
+                          return Checkbox(
+                            value: _acceptedPrivacy,
+                            onChanged: (v) => setState(() => _acceptedPrivacy = v ?? false),
+                          );
+                        },
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Privacy Policy', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                              content: SingleChildScrollView(
+                                child: DefaultTextStyle(
+                                  style: const TextStyle(fontSize: 12, height: 1.3, color: Colors.black87),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: const [
+                                      Text('Effective Date: January 2026\n'),
+                                      SizedBox(height: 6),
+                                      Text('This Privacy Policy explains how U-COLORPI collects, uses, and protects user information. This application is developed for academic and research purposes only and is not intended to replace professional medical diagnosis or treatment.'),
+                                      SizedBox(height: 8),
+                                      Text('1. Information We Collect\n\nWhen you create an account, the application may collect the following information:\n\nBasic account information (e.g., name, email address)\n\nUrinalysis scan results generated by the application\n\nApplication usage data for system improvement and academic evaluation'),
+                                      SizedBox(height: 8),
+                                      Text('2. Purpose of Data Collection\n\nThe collected information is used solely to:\n\n- Store and display urinalysis results based on standard reference values\n- Present scan results and record history for user review\n- Support system testing, evaluation, and documentation for this academic study\n- Improve the functionality, usability, and performance of the application'),
+                                      SizedBox(height: 8),
+                                      Text('3. Result Interpretation Disclaimer\n\nAll urinalysis results displayed in the application are reference-based and intended for informational and monitoring purposes only. The application does not provide medical diagnoses, treatment recommendations, or clinical decisions.'),
+                                      SizedBox(height: 8),
+                                      Text('4. Data Protection and Security\n\nReasonable technical and organizational measures are implemented to protect user data against unauthorized access, alteration, or disclosure. Access to stored data is limited to authorized users and researchers involved in this academic project.'),
+                                      SizedBox(height: 8),
+                                      Text('5. Data Sharing\n\nUser information is not shared with third parties. Data may only be accessed for academic evaluation and research documentation related to this study.'),
+                                      SizedBox(height: 8),
+                                      Text('6. User Consent\n\nBy creating an account and checking the consent box, you confirm that:\n\n- You have read and understood this Privacy Policy\n- You voluntarily provide your information\n- You consent to the collection and use of your data as described above'),
+                                      SizedBox(height: 8),
+                                      Text('7. Legal Compliance\n\nThis application follows the principles of the Data Privacy Act of 2012 (Republic Act No. 10173), including transparency, legitimate purpose, and proportionality.'),
+                                      SizedBox(height: 8),
+                                      Text('8. Contact Information\n\nFor questions or concerns regarding this Privacy Policy, please contact: Developer Contact Information alyssasicatpascual@gmail.com'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+                              ],
+                            ),
+                          ),
+                          child: const Text('I have read and agree to the Privacy Policy and consent to the collection and use of my data for academic and research purposes.', style: TextStyle(fontSize: 10)),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 18),
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       final fullName = fullNameController.text.trim();
                       final dob = dobController.text.trim();
                       final sex = sexValue;
@@ -212,20 +277,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         return;
                       }
 
+                      if (!_acceptedPrivacy) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please accept the Privacy Policy')));
+                        return;
+                      }
+
                       if (password != confirm) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
                         return;
                       }
 
-                      final profile = {
-                        'fullName': fullName,
-                        'dateOfBirth': dob,
-                        'sex': sex,
-                        'email': email,
-                        'password': password,
-                      };
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => const Center(child: CircularProgressIndicator()),
+                      );
 
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => HealthBackgroundScreen(profile: profile)));
+                      try {
+                        final auth = Auth();
+                        await auth.createUserWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                          fullName: fullName,
+                        );
+
+                        Navigator.of(context).pop(); // dismiss loading
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created.')));
+                        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage(isReturningUser: false)));
+
+                      } catch (e) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign up failed: ${e.toString()}')));
+                      }
                     },
                     child: Container(
                       width: double.infinity,
@@ -237,7 +320,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         boxShadow: [BoxShadow(color: primary1.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 6))],
                       ),
                       child: const Center(
-                        child: Text('Next', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                        child: Text('Sign Up', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ),
@@ -260,8 +343,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
