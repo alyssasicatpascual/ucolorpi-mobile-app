@@ -25,19 +25,29 @@ class Auth {
     required String email,
     required String password,
     required String fullName,
+    // FIX: Added parameters for Sex and DOB
+    required String? sex,
+    required String dateOfBirth,
   }) async {
+    // 1. Create the user in Firebase Authentication
     final UserCredential credential =
         await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    // 🔑 Save user info in Firestore using UID
+    // 2. Save extended user info in Firestore using the new UID
     await _firestore.collection('users').doc(credential.user!.uid).set({
       'fullName': fullName,
       'email': email,
+      // Save the new fields (with a default fallback just in case)
+      'sex': sex ?? 'Not Specified',
+      'dateOfBirth': dateOfBirth,
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    // 3. Optional: Update the basic display name on the Auth object immediately
+    await credential.user?.updateDisplayName(fullName);
 
     return credential;
   }
