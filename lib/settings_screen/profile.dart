@@ -55,7 +55,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       dobController.text = (data['dateOfBirth'] ?? '') as String;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load profile: ${e.toString()}')));
+      // FIX 1: Check mounted before showing SnackBar in catch block
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load profile: ${e.toString()}')));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -101,14 +104,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await user.reload();
       }
 
+      // FIX 2: Check mounted before popping the loading dialog
+      if (!mounted) return;
       Navigator.of(context).pop(); // dismiss loading
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
-        Navigator.of(context).pop(true);
-      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+      Navigator.of(context).pop(true);
+      
     } catch (e) {
-      Navigator.of(context).pop();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: ${e.toString()}')));
+      // FIX 3: Check mounted before using context in catch block
+      if (!mounted) return;
+      Navigator.of(context).pop(); // dismiss loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: ${e.toString()}')));
     }
   }
 
