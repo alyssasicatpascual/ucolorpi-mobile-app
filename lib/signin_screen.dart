@@ -29,10 +29,13 @@ class _SignInScreenState extends State<SignInScreen> {
         password: passwordController.text.trim(),
       );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage(isReturningUser: true)));
-      }
+      if (!context.mounted) return;
+      
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage(isReturningUser: true)));
+      
     } catch (e) {
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -47,16 +50,13 @@ class _SignInScreenState extends State<SignInScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // Optional: resizeToAvoidBottomInset: false, // Uncomment if you want to stop the view from pushing up at all
       body: Column(
         children: [
           // 🔹 Gradient Header with centered title
           Container(
             width: double.infinity,
-            // 1. REMOVED fixed height: 100
-            // 2. Added dynamic padding for status bar
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 20, // Status bar + 20px
+              top: MediaQuery.of(context).padding.top + 20, 
               bottom: 20,
               left: 10,
               right: 10,
@@ -72,17 +72,15 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
             ),
             child: Stack(
-              alignment: Alignment.center, // Ensure stack aligns children to center by default
+              alignment: Alignment.center, 
               children: [
-                // Back button aligned left
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(), // Added pop functionality
+                    onPressed: () => Navigator.of(context).pop(), 
                   ),
                 ),
-                // Centered title
                 const Align(
                   alignment: Alignment.center,
                   child: Text(
@@ -118,12 +116,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   // Email label
                   const Text(
-                    'Email or Mobile Number',
+                    'Email Address',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
 
-                  // Email field (pill)
                   TextField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -141,14 +138,12 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // Password label
                   const Text(
                     'Password',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
 
-                  // Password field with suffix icon in pill
                   TextField(
                     controller: passwordController,
                     obscureText: _obscurePassword,
@@ -188,9 +183,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Gradient Log In button
                   GestureDetector(
-                    onTap: isLoading ? null : _login, // Prevent multiple taps while loading
+                    onTap: isLoading ? null : _login, 
                     child: Container(
                       width: double.infinity,
                       height: 52,
