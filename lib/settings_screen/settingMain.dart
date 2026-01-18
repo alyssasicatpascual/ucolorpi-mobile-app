@@ -16,7 +16,7 @@ class SettingsMain extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              decoration: BoxDecoration(color: const Color(0xFF33E4DB), shape: BoxShape.circle),
+              decoration: const BoxDecoration(color: Color(0xFF33E4DB), shape: BoxShape.circle),
               padding: const EdgeInsets.all(10),
               child: Icon(icon, color: Colors.white, size: 20),
             ),
@@ -64,8 +64,13 @@ class SettingsMain extends StatelessWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: () async {
-                          Navigator.of(ctx).pop();
+                          Navigator.of(ctx).pop(); // Close the modal first
+                          
                           await FirebaseAuth.instance.signOut();
+                          
+                          // FIX: Check if the parent context is still valid
+                          if (!context.mounted) return; 
+
                           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const SignInScreen()));
                         },
                         child: Container(
@@ -100,7 +105,7 @@ class SettingsMain extends StatelessWidget {
             decoration: const BoxDecoration(
               gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF33E4DB), Color(0xFF00BBD3)]),
             ),
-            child: SafeArea(
+            child: const SafeArea(
               child: Center(
                 child: Text('SETTINGS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
               ),
@@ -133,7 +138,7 @@ class SettingsMain extends StatelessWidget {
 
                   const Divider(),
 
-                                    _item(context, Icons.logout, 'Logout', () {
+                  _item(context, Icons.logout, 'Logout', () {
                     _showLogoutSheet(context);
                   }),
 
