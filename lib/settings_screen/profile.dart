@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -34,26 +33,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final auth = Auth();
+    final user = auth.currentUser;
     if (user == null) {
       if (mounted) Navigator.of(context).pop();
       return;
     }
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final data = doc.data() ?? {};
-      fullNameController.text = (data['fullName'] ?? '') as String;
-      emailController.text = (data['email'] ?? user.email ?? '') as String;
-      
-      final rawSex = (data['sex'] ?? '') as String?;
-      if (rawSex != null && rawSex.trim().isNotEmpty) {
-        final match = ['Male', 'Female', 'Other'].where((s) => s.toLowerCase() == rawSex.toLowerCase());
-        _selectedSex = match.isNotEmpty ? match.first : rawSex;
-      } else {
-        _selectedSex = null;
-      }
-      dobController.text = (data['dateOfBirth'] ?? '') as String;
+      // For mock auth, we show the basic user info
+      fullNameController.text = user.displayName ?? '';
+      emailController.text = user.email ?? '';
+      _selectedSex = null;
+      dobController.text = '';
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load profile: ${e.toString()}')));
@@ -77,12 +69,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _updateProfile() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final fullName = fullNameController.text.trim();
-    final dob = dobController.text.trim();
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -90,28 +76,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     try {
-      final data = {
-        'fullName': fullName,
-        'sex': _selectedSex ?? '',
-        'dateOfBirth': dob,
-      };
-
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(data, SetOptions(merge: true));
-
-      if ((user.displayName ?? '') != fullName) {
-        await user.updateDisplayName(fullName);
-        await user.reload();
-      }
+      // Simulate profile update with mock delay
+      await Future.delayed(const Duration(milliseconds: 500));
 
       if (!mounted) return;
-      Navigator.of(context).pop(); 
+      Navigator.of(context).pop();
       
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
       Navigator.of(context).pop(true);
       
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop(); 
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: ${e.toString()}')));
     }
   }

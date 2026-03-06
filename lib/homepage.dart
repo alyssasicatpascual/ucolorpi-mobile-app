@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'auth.dart';
 import 'mockData.dart';
 import 'fullReport.dart';
 import 'A_NewScan.dart';
@@ -22,51 +21,26 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
   int navIndex = 0;
   String? _fullName;
-  StreamSubscription<User?>? _authSubscription;
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _userDocSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadFullName();
-    _attachUserDocListener(FirebaseAuth.instance.currentUser);
-    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
-      _loadFullName(user);
-      _attachUserDocListener(user);
-    });
   }
 
-  Future<void> _loadFullName([User? user]) async {
-    try {
-      final u = user ?? FirebaseAuth.instance.currentUser;
-      if (u == null) {
-        if (mounted) setState(() => _fullName = null);
-        return;
-      }
-      final doc = await FirebaseFirestore.instance.collection('users').doc(u.uid).get();
-      final name = doc.data()?['fullName'] as String?;
-      if (mounted) setState(() => _fullName = name ?? u.email);
-    } catch (_) {
-      // ignore errors and keep default
+  Future<void> _loadFullName() async {
+    final auth = Auth();
+    final user = auth.currentUser;
+    if (user != null) {
+      if (mounted) setState(() => _fullName = user.displayName ?? user.email);
+    } else {
+      if (mounted) setState(() => _fullName = null);
     }
   }
 
   @override
   void dispose() {
-    _authSubscription?.cancel();
-    _userDocSubscription?.cancel();
     super.dispose();
-  }
-
-  void _attachUserDocListener(User? user) {
-    _userDocSubscription?.cancel();
-    if (user == null) return;
-    _userDocSubscription = FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots().listen((doc) {
-      final name = doc.data()?['fullName'] as String?;
-      if (mounted) setState(() => _fullName = name ?? 'User');
-    }, onError: (_) {
-      // ignore
-    });
   }
 
   bool deviceConnected = false;
