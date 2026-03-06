@@ -21,6 +21,21 @@ class _SignInScreenState extends State<SignInScreen> {
   bool isLoading = false;
 
   Future<void> _login() async {
+    // Validate inputs
+    if (emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email')),
+      );
+      return;
+    }
+    
+    if (passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your password')),
+      );
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {

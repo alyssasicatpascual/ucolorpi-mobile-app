@@ -76,11 +76,11 @@ class ANewScanScreen extends StatelessWidget {
                     _infoCard(
                       title: 'Preparation Before Scanning',
                       items: const [
-                        'Wash And Dry Your Hands Properly.',
-                        'Collect A Fresh Urine Sample In A Clean Container.',
-                        'Dip The Reagent Strip Into The Urine For 1–2 Seconds.',
-                        'Remove It And Tap Gently To Remove Excess Liquid.',
-                        'Place The Dipstick Flat On The U-COLORPI Tray (Pads Facing Upward).',
+                        'Wash and dry your hands properly.',
+                        'Collect a fresh urine sample in a clean container.',
+                        'Dip the reagent strip into the urine making sure that all pads are fully soaked for about 1–2 seconds.',
+                        'Remove the strip and tap it gently sideways to remove excess urine.',
+                        'Place the dipstick flat on the U-COLORPI tray with the pads facing upward.',
                       ],
                     ),
 
@@ -89,10 +89,10 @@ class ANewScanScreen extends StatelessWidget {
                     _infoCard(
                       title: 'Scanning Guidelines',
                       items: const [
-                        'Place The Device On A Stable, Flat Surface.',
-                        'Keep The Dipstick Still And Centered On The Tray.',
-                        'Avoid Direct Sunlight Or Reflections During Scanning.',
-                        'Wait Until The Indicator Light Turns Green.',
+                        'Place the device on a stable, flat surface.',
+                        'Keep the dipstick still and centered on the tray.',
+                        'Make sure the device cover is properly closed.',
+                        'Wait for the results to appear on the LCD and/or the mobile application.',
                       ],
                     ),
 

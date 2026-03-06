@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../signin_screen.dart';
+import '../auth.dart';
 import 'profile.dart';
 import 'privacyPolicy.dart';
 import 'help.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class SettingsMain extends StatelessWidget {
   const SettingsMain({Key? key}) : super(key: key);
@@ -64,9 +64,10 @@ class SettingsMain extends StatelessWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: () async {
-                          Navigator.of(ctx).pop(); 
+                          Navigator.of(ctx).pop();
                           
-                          await FirebaseAuth.instance.signOut();
+                          final auth = Auth();
+                          await auth.signOut();
                           
                           if (!context.mounted) return; 
 
